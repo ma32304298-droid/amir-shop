@@ -1,0 +1,1 @@
+- [Supabase schema](supabase-schema.md) — real column names differ from what was coded; active not is_active, image not image_url, user_id not player_id, no slug/name_ar/total_price.

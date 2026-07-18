@@ -3,13 +3,21 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Amir Shop API - Gaming top-up platform
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: games
+    description: Game operations
+  - name: packages
+    description: Package operations
+  - name: orders
+    description: Order operations
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
@@ -24,6 +32,281 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /games:
+    get:
+      operationId: listGames
+      tags: [games]
+      summary: List all active games
+      responses:
+        "200":
+          description: List of games
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Game"
+    post:
+      operationId: createGame
+      tags: [games]
+      summary: Create a new game (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameInput"
+      responses:
+        "201":
+          description: Created game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+  /games/{id}:
+    get:
+      operationId: getGame
+      tags: [games]
+      summary: Get a game by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+        "404":
+          description: Not found
+    put:
+      operationId: updateGame
+      tags: [games]
+      summary: Update a game (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameInput"
+      responses:
+        "200":
+          description: Updated game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+    delete:
+      operationId: deleteGame
+      tags: [games]
+      summary: Delete a game (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /games/{gameId}/packages:
+    get:
+      operationId: listPackages
+      tags: [packages]
+      summary: List packages for a game
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of packages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Package"
+  /packages:
+    post:
+      operationId: createPackage
+      tags: [packages]
+      summary: Create a package (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackageInput"
+      responses:
+        "201":
+          description: Created package
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Package"
+  /packages/{id}:
+    put:
+      operationId: updatePackage
+      tags: [packages]
+      summary: Update a package (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackageInput"
+      responses:
+        "200":
+          description: Updated package
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Package"
+    delete:
+      operationId: deletePackage
+      tags: [packages]
+      summary: Delete a package (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /orders:
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List all orders (admin only)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create a new order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "201":
+          description: Created order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+  /orders/lookup:
+    get:
+      operationId: lookupOrders
+      tags: [orders]
+      summary: Look up orders by player ID or email
+      parameters:
+        - name: playerId
+          in: query
+          schema:
+            type: string
+        - name: email
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get an order by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+  /orders/{id}/status:
+    patch:
+      operationId: updateOrderStatus
+      tags: [orders]
+      summary: Update order status (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderStatusUpdate"
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get admin dashboard stats
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +316,151 @@ components:
           type: string
       required:
         - status
-
+    Game:
+      type: object
+      required: [id, name, nameAr, slug, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        nameAr:
+          type: string
+        slug:
+          type: string
+        description:
+          type: ["string", "null"]
+        descriptionAr:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+    GameInput:
+      type: object
+      required: [name, nameAr, slug]
+      properties:
+        name:
+          type: string
+        nameAr:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        descriptionAr:
+          type: string
+        imageUrl:
+          type: string
+        isActive:
+          type: boolean
+    Package:
+      type: object
+      required: [id, gameId, name, nameAr, amount, price, currency, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        gameId:
+          type: integer
+        name:
+          type: string
+        nameAr:
+          type: string
+        amount:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+    PackageInput:
+      type: object
+      required: [gameId, name, nameAr, amount, price, currency]
+      properties:
+        gameId:
+          type: integer
+        name:
+          type: string
+        nameAr:
+          type: string
+        amount:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+        isActive:
+          type: boolean
+    Order:
+      type: object
+      required: [id, gameId, packageId, playerId, playerEmail, status, totalPrice, currency, createdAt]
+      properties:
+        id:
+          type: integer
+        gameId:
+          type: integer
+        packageId:
+          type: integer
+        gameName:
+          type: ["string", "null"]
+        packageName:
+          type: ["string", "null"]
+        playerId:
+          type: string
+        playerEmail:
+          type: string
+        playerUsername:
+          type: ["string", "null"]
+        status:
+          type: string
+        totalPrice:
+          type: number
+        currency:
+          type: string
+        paymentProofUrl:
+          type: ["string", "null"]
+        adminNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+    OrderInput:
+      type: object
+      required: [gameId, packageId, playerId, playerEmail]
+      properties:
+        gameId:
+          type: integer
+        packageId:
+          type: integer
+        playerId:
+          type: string
+        playerEmail:
+          type: string
+        playerUsername:
+          type: string
+    OrderStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+        adminNotes:
+          type: string
+    AdminStats:
+      type: object
+      required: [totalOrders, pendingOrders, completedOrders, totalRevenue, totalGames]
+      properties:
+        totalOrders:
+          type: integer
+        pendingOrders:
+          type: integer
+        completedOrders:
+          type: integer
+        totalRevenue:
+          type: number
+        totalGames:
+          type: integer

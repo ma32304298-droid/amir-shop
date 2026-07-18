@@ -1,45 +1,57 @@
-# [Project name]
+# Amir Shop — Gaming Top-Up Website
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A professional gaming top-up platform supporting Arabic and English, with a dark gaming aesthetic. Players can browse games, purchase top-up packages, upload payment proofs, and track their orders. Admins manage the entire catalog and order pipeline.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/amir-shop run dev` — run the frontend (port from $PORT)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
 - `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Frontend: React + Vite, Tailwind CSS v4, shadcn/ui, Framer Motion
+- Backend: Supabase (database + storage)
+- i18n: i18next with Arabic (RTL) and English
+- Routing: Wouter
 
-## Where things live
+## Where Things Live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/amir-shop/src/pages/` — all page components
+- `artifacts/amir-shop/src/components/` — shared components
+- `artifacts/amir-shop/src/lib/supabase.ts` — Supabase client
+- `artifacts/amir-shop/src/lib/database.types.ts` — TypeScript types for DB tables
+- `artifacts/amir-shop/src/lib/i18n.ts` — all translation strings (EN + AR)
+- `artifacts/amir-shop/supabase-setup.sql` — SQL to run in Supabase dashboard
 
-## Architecture decisions
+## Supabase Setup (one-time)
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+1. Open your Supabase project → SQL Editor
+2. Run the contents of `artifacts/amir-shop/supabase-setup.sql`
+3. This creates: `games`, `packages`, `orders` tables + storage bucket `payment-proofs` + seed data
 
-## Product
+## Environment Variables
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- `VITE_SUPABASE_URL` — Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` — Supabase publishable/anon key
 
-## User preferences
+## Admin Access
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- URL: `/admin`
+- Password: `admin123`
+- Routes: `/admin/dashboard`, `/admin/games`, `/admin/packages`, `/admin/orders`
 
-## Gotchas
+## Architecture Decisions
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Supabase client is used directly from the frontend (no Express API needed for data)
+- Arabic RTL is applied via `document.documentElement.dir = 'rtl'` on language switch
+- Admin auth is a simple localStorage flag (`amir_admin_auth = "true"`) — upgrade to Supabase Auth for production
+- Payment proof files go to Supabase Storage bucket `payment-proofs`
+- Order lookup works by email OR player ID via Supabase `.or()` query
 
-## Pointers
+## User Preferences
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Dark professional gaming theme
+- Arabic and English support (RTL/LTR)
+- Supabase as the sole data backend
