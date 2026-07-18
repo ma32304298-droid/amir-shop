@@ -176,12 +176,10 @@ export default function OrderForm() {
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               
-              <h2 className="text-2xl font-bold mb-2 text-white">{t('order.success')}</h2>
-              <p className="text-muted-foreground mb-4">
+              <h2 className="text-2xl font-bold mb-3 text-white">{t('order.success')}</h2>
+              <div className="font-mono text-3xl font-black text-primary mb-3">#{orderId}</div>
+              <p className="text-muted-foreground mb-8">
                 {t('order.successDesc', { id: orderId })}
-              </p>
-              <p className="text-sm text-muted-foreground mb-8">
-                Your order <span className="font-mono text-white font-bold">#{orderId}</span> has been placed. Our team will process it shortly and contact you if needed.
               </p>
 
               <div className="flex gap-4">

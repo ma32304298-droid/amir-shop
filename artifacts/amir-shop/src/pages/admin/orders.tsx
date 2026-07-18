@@ -28,7 +28,7 @@ export default function AdminOrders() {
     try {
       let query = supabase
         .from('orders')
-        .select(`*, games(name), packages(name, amount)`)
+        .select(`*, games(name), packages(name, amount, price)`)
         .order('created_at', { ascending: false });
         
       if (filterStatus !== 'all') {
@@ -62,7 +62,7 @@ export default function AdminOrders() {
     try {
       const { error } = await supabase
         .from('orders')
-        .update({ status: updateStatus as any, notes: updateNotes })
+        .update({ status: updateStatus as any, notes: updateNotes, updated_at: new Date().toISOString() })
         .eq('id', selectedOrder.id);
         
       if (error) throw error;
@@ -191,7 +191,7 @@ export default function AdminOrders() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">Game:</span> <span className="text-white font-medium">{selectedOrder.games?.name}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Item:</span> <span className="text-secondary font-bold bg-secondary/10 px-2 rounded">{selectedOrder.packages?.amount} {selectedOrder.packages?.name}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Currency:</span> <span className="text-white">{selectedOrder.currency}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Price:</span> <span className="text-white font-bold">{selectedOrder.packages?.price?.toFixed(2)} {selectedOrder.currency}</span></div>
                 </div>
               </div>
 

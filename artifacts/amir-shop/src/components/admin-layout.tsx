@@ -1,4 +1,4 @@
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { LayoutDashboard, Gamepad2, PackageSearch, ShoppingCart, LogOut } from 'lucide-react';
@@ -6,6 +6,7 @@ import { LayoutDashboard, Gamepad2, PackageSearch, ShoppingCart, LogOut } from '
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const { logout } = useAdminAuth();
+  const [location] = useLocation();
 
   const links = [
     { href: '/admin/dashboard', label: t('admin.nav.dashboard'), icon: LayoutDashboard },
@@ -25,8 +26,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 p-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-auto">
           {links.map((link) => {
             const Icon = link.icon;
-            // Using window.location.pathname for simple matching, wouter hook also works but context issues can arise
-            const isActive = window.location.pathname === link.href;
+            const isActive = location === link.href;
             
             return (
               <Link 
