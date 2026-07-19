@@ -61,6 +61,32 @@ export interface Database {
           created_at?: string;
         };
       };
+      payment_proofs: {
+        Row: {
+          id: number;
+          order_id: number;
+          proof_url: string;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          order_id: number;
+          proof_url: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          order_id?: number;
+          proof_url?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       orders: {
         Row: {
           id: number;

@@ -3,11 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { AdminLayout } from '@/components/admin-layout';
 import { supabase } from '@/lib/supabase';
-import { Loader2, X, Save } from 'lucide-react';
+import { Loader2, X, Save, ImageIcon, ExternalLink, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 type Order = any;
+type PaymentProof = { id: number; order_id: number; proof_url: string; status: string; created_at: string };
 
 export default function AdminOrders() {
   const { t } = useTranslation();
@@ -16,12 +17,16 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  
+
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [updateStatus, setUpdateStatus] = useState('');
   const [updateNotes, setUpdateNotes] = useState('');
   const [savingStatus, setSavingStatus] = useState(false);
+
+  const [orderProofs, setOrderProofs] = useState<PaymentProof[]>([]);
+  const [loadingProofs, setLoadingProofs] = useState(false);
+  const [updatingProofId, setUpdatingProofId] = useState<number | null>(null);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -49,11 +54,45 @@ export default function AdminOrders() {
     fetchOrders();
   }, [filterStatus]);
 
-  const openOrderModal = (order: Order) => {
+  const openOrderModal = async (order: Order) => {
     setSelectedOrder(order);
     setUpdateStatus(order.status);
     setUpdateNotes(order.notes || '');
+    setOrderProofs([]);
     setIsModalOpen(true);
+
+    // Fetch payment proofs for this order
+    setLoadingProofs(true);
+    try {
+      const { data, error } = await supabase
+        .from('payment_proofs')
+        .select('*')
+        .eq('order_id', order.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      if (data) setOrderProofs(data as PaymentProof[]);
+    } catch (err: any) {
+      console.error('Could not load proofs:', err.message);
+    } finally {
+      setLoadingProofs(false);
+    }
+  };
+
+  const handleUpdateProofStatus = async (proofId: number, newStatus: string) => {
+    setUpdatingProofId(proofId);
+    try {
+      const { error } = await supabase
+        .from('payment_proofs')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', proofId);
+      if (error) throw error;
+      setOrderProofs(prev => prev.map(p => p.id === proofId ? { ...p, status: newStatus } : p));
+      toast.success('Proof status updated');
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setUpdatingProofId(null);
+    }
   };
 
   const handleUpdateStatus = async () => {
@@ -193,6 +232,66 @@ export default function AdminOrders() {
                   <div className="flex justify-between"><span className="text-muted-foreground">Item:</span> <span className="text-secondary font-bold bg-secondary/10 px-2 rounded">{selectedOrder.packages?.amount} {selectedOrder.packages?.name}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Price:</span> <span className="text-white font-bold">{selectedOrder.packages?.price?.toFixed(2)} {selectedOrder.currency}</span></div>
                 </div>
+              </div>
+
+              {/* Payment Proof */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <h3 className="font-medium text-white/50 mb-3 text-xs uppercase tracking-wider">Payment Proof</h3>
+                {loadingProofs ? (
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Loading...
+                  </div>
+                ) : orderProofs.length === 0 ? (
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <ImageIcon className="w-4 h-4" /> No proof uploaded yet
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {orderProofs.map((proof) => (
+                      <div key={proof.id} className="flex flex-col gap-3">
+                        <a href={proof.proof_url} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-white/10 hover:border-primary/50 transition-colors group relative">
+                          <img
+                            src={proof.proof_url}
+                            alt="Payment proof"
+                            className="w-full max-h-48 object-contain bg-black/40"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                            <ExternalLink className="w-6 h-6 text-white" />
+                          </div>
+                        </a>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs text-muted-foreground">{format(new Date(proof.created_at), 'MMM dd, HH:mm')}</span>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs px-2 py-1 rounded font-medium ${
+                              proof.status === 'approved' ? 'bg-green-500/20 text-green-400' :
+                              proof.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                              'bg-amber-500/20 text-amber-400'
+                            }`}>
+                              {proof.status}
+                            </span>
+                            <button
+                              onClick={() => handleUpdateProofStatus(proof.id, 'approved')}
+                              disabled={proof.status === 'approved' || updatingProofId === proof.id}
+                              title="Approve"
+                              className="p-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              {updatingProofId === proof.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                            </button>
+                            <button
+                              onClick={() => handleUpdateProofStatus(proof.id, 'rejected')}
+                              disabled={proof.status === 'rejected' || updatingProofId === proof.id}
+                              title="Reject"
+                              className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Status & Notes */}
