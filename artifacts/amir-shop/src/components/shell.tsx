@@ -130,6 +130,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <p className="text-muted-foreground text-sm">
             &copy; {new Date().getFullYear()} Amir Shop. All rights reserved.
           </p>
+          <div className="mt-4">
+            <Link
+              href="/admin"
+              className="text-xs text-white/20 hover:text-white/50 transition-colors"
+            >
+              Admin Panel
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
